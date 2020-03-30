@@ -1,6 +1,9 @@
 module Main where
-
-import Lib
+import System.Environment
 
 main :: IO ()
-main = someFunc
+main = do
+  args <- getArgs
+  let first = read (args !! 0)::Int
+      second = read (args !! 1)::Int
+      in putStrLn ("Hello, " ++ show (first + second))
