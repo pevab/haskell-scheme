@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bc1f9dac8111639b52ab07aab753a9f4b9e81e201462abc41127581a2a61b5aa
+-- hash: 0af1a005decc306bac012491d5c0d004cd40d0531a57cfd6a72535b810280c9c
 
 name:           scheme
 version:        0.1.0.0
@@ -32,6 +32,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , parsec >=3.1.14
   default-language: Haskell2010
 
 executable scheme-exe
@@ -43,6 +44,7 @@ executable scheme-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , parsec >=3.1.14
     , scheme
   default-language: Haskell2010
 
@@ -56,5 +58,6 @@ test-suite scheme-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , parsec >=3.1.14
     , scheme
   default-language: Haskell2010
