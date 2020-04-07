@@ -54,19 +54,7 @@ parseAtom = do
 
 -- Number
 
---parseNumber :: Parser LispVal
---parseNumber = liftM (Number . read) $ many1 digit
---
---parseNumber2 :: Parser LispVal
---parseNumber2 = do
---  s <- many1 digit
---  let n = read s
---  return $ Number n
---
---parseNumber3 :: Parser LispVal
---parseNumber3 = (many1 digit) >>= \s -> return $ Number (read s)
-
-data NumberFormat = Hex | Dec | Oct deriving Show
+data NumberFormat = Hex | Dec | Oct | Default deriving Show
 
 parseRadix :: Parser NumberFormat
 parseRadix = do
@@ -78,17 +66,21 @@ parseRadix = do
     'x' -> Hex
 
 defaultRadix :: Parser NumberFormat
-defaultRadix = return Dec
+defaultRadix = return Default
 
 parseNumber :: Parser LispVal
 parseNumber = do
-  r <- parseRadix <|> defaultRadix
-  n <- many1 (letter <|> digit)
-  return $ case r of
-    Oct -> let [(x,_)] = readOct n in Number x
-    Hex -> let [(x,_)] = readHex n in Number x
-    Dec -> let [(x,_)] = readDec n in Number x
-
+  radixL <- parseRadix <|> defaultRadix
+  digits <- many1 (oneOf "abcdefABCDEF" <|> digit)
+  radixR <- parseRadix <|> defaultRadix
+  return $ case (radixL, radixR) of
+    (Oct,_) -> let [(x,_)] = readOct digits in Number x
+    (Hex,_) -> let [(x,_)] = readHex digits in Number x
+    (Dec,_) -> let [(x,_)] = readDec digits in Number x
+    (Default, Oct) -> let [(x,_)] = readOct digits in Number x
+    (Default, Hex) -> let [(x,_)] = readHex digits in Number x
+    (Default, Dec) -> let [(x,_)] = readDec digits in Number x
+    (Default, Default) -> let [(x,_)] = readDec digits in Number x
 
 -- Expr
 
