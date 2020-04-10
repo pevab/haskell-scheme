@@ -3,15 +3,7 @@ module SchemeParser where
 import Text.ParserCombinators.Parsec hiding (spaces)
 import Control.Monad
 import Numeric (readHex, readDec, readOct)
-
-data LispVal = Atom String
-  | List [LispVal]
-  | DottedList [LispVal] LispVal
-  | Number Integer
-  | String String
-  | Bool Bool
-  | Character Char
-  deriving Show
+import SchemeModel
 
 -- String
 escape :: Parser Char
@@ -35,7 +27,7 @@ parseString = do
 
 -- Atom
 symbol :: Parser Char
-symbol = oneOf "!$%&|*+-/:<=>?@^_~"
+symbol = oneOf "!$#%&|*+-/:<=>?@^_~"
 
 spaces :: Parser ()
 spaces = skipMany1 space
@@ -143,7 +135,3 @@ parseExpr = parseAtom
     return x
 
 
-readExpr :: String -> String
-readExpr input = case parse parseExpr "lisp" input of
-  Left err -> show err
-  Right val -> show val
