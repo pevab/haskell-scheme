@@ -74,9 +74,7 @@ eval val@(String _) = return val
 eval val@(Number _) = return val
 eval val@(Bool _) = return val
 eval val@(Atom _) = return val
-
 eval (List [Atom "quote", val]) = return val
-
 eval (List [Atom "if", pred, conseq, alt]) = do
   result <- eval pred
   case result of
@@ -84,6 +82,7 @@ eval (List [Atom "if", pred, conseq, alt]) = do
     Bool False -> eval alt
     notBool -> throwError $ TypeMismatch "bool" notBool
 eval (List (Atom func : args)) = mapM eval args >>= apply func
+eval (List a) = liftM List $ mapM eval a
 eval badForm = throwError $ BadSpecialForm "Unrecognized special form" badForm
 
 apply :: String -> [LispVal] -> ThrowsError LispVal
@@ -121,7 +120,8 @@ primitives = [("+", numericBinop (+)),
   ("eq?", eqv),
   ("eqv?", eqv),
   ("equal?", equal),
-  ("cond", cond)]
+  ("cond", cond),
+  ("case", myCase)]
 
 -- numeric binary op
 
@@ -274,3 +274,27 @@ cond ((List (test:expressions)):rest) = do
     Bool False -> cond rest
     notBool -> throwError $ TypeMismatch "bool" notBool
 
+-- case
+
+myCase :: [LispVal] -> ThrowsError LispVal
+myCase (key:clauses) = do
+  keyValue <- eval key
+  auxMyCase keyValue clauses
+
+auxMyCase :: LispVal -> [LispVal] -> ThrowsError LispVal
+auxMyCase keyValue (clause:clauses) = case clause of
+  List ((List set):expressions) -> do
+    ok <- liftM or $ mapM (eqp keyValue) $ set
+    if ok
+    then foldM (\z -> eval) (Atom "none") expressions
+    else auxMyCase keyValue clauses
+  List ((Atom "else"):expressions) -> foldM (\z -> eval) (Atom "none") expressions
+  badForm -> throwError $ BadSpecialForm "Unrecognized special form" badForm
+auxMyCase keyCalue [] = throwError $ Default "no matching cases"
+
+eqp :: LispVal -> LispVal -> ThrowsError Bool
+eqp a b = do
+  v <- eqv [a,b]
+  case v of
+    Bool val -> return val
+    notBool -> throwError $ TypeMismatch "bool" notBool
